@@ -10,7 +10,10 @@
     },
     {
       "src": "InstaOrionapp-api/src/main.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": "InstaOrionapp-api/src/cookies.txt"
+      }
     }
   ],
   "routes": [
