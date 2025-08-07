@@ -15,8 +15,9 @@ def download_video():
         return jsonify({'error': 'URL do Instagram inválida ou ausente'}), 400
     
     # Obter o caminho para o diretório de src
-    src_dir = os.path.dirname(os.path.abspath(__file__))
-    cookie_file = os.path.join(src_dir, 'cookies.txt')
+    # Constrói o caminho para o arquivo de cookies na pasta 'src'
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    cookie_file = os.path.join(base_dir, 'cookies.txt')
 
     ydl_opts = {
         'format': 'best',
