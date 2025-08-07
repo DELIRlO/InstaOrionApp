@@ -19,14 +19,17 @@ def download_video():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cookie_file = os.path.join(base_dir, 'cookies.txt')
 
+    # Adiciona uma verificação explícita para o arquivo de cookie no ambiente Vercel.
+    # Se o arquivo não for encontrado, a aplicação irá falhar com uma mensagem clara.
+    if not os.path.exists(cookie_file):
+        return jsonify({'error': f'CRÍTICO: Arquivo de cookie não encontrado no caminho esperado: {cookie_file}. O deploy não pode funcionar sem ele.'}), 500
+
     ydl_opts = {
         'format': 'best',
         'quiet': True,
         'extract_flat': True,
+        'cookiefile': cookie_file,
     }
-
-    if os.path.exists(cookie_file):
-        ydl_opts['cookiefile'] = cookie_file
 
 
     try:
