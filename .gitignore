@@ -1,0 +1,15 @@
+# Dependencies
+/node_modules
+/dist
+
+# Python
+/InstaOrionapp-api/venv
+__pycache__/
+*.pyc
+
+# IDEs and editors
+.vscode
+.idea
+
+# Environment files
+.env*
