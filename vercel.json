@@ -12,11 +12,15 @@
       "src": "InstaOrionapp-api/src/main.py",
       "use": "@vercel/python",
       "config": {
-        "includeFiles": "InstaOrionapp-api/src/cookies.txt"
+        "includeFiles": "InstaOrionapp-api/**"
       }
     }
   ],
   "routes": [
+    {
+      "src": "/api/health",
+      "dest": "InstaOrionapp-api/src/main.py"
+    },
     {
       "src": "/api/(.*)",
       "dest": "InstaOrionapp-api/src/main.py"
@@ -28,5 +32,8 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "VERCEL": "1"
+  }
 }

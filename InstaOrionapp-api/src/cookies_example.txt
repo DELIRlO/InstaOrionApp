@@ -1,0 +1,13 @@
+# Netscape HTTP Cookie File
+# This is a generated file! Do not edit.
+
+# Para usar este aplicativo, você precisa:
+# 1. Fazer login no Instagram no seu navegador
+# 2. Abrir as ferramentas de desenvolvedor (F12)
+# 3. Ir para a aba Application/Storage > Cookies > https://www.instagram.com
+# 4. Encontrar o cookie 'sessionid' e copiar seu valor
+# 5. Substituir 'SEU_SESSIONID_AQUI' abaixo pelo valor real
+# 6. Renomear este arquivo para 'cookies.txt'
+
+.instagram.com	TRUE	/	FALSE	1735689600	sessionid	SEU_SESSIONID_AQUI
+
