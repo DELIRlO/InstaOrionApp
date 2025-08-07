@@ -1,104 +1,127 @@
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button.jsx'
-import { Input } from '@/components/ui/input.jsx'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
-import { Download, Instagram, Link, Smartphone, Video, CheckCircle, AlertCircle, Plus } from 'lucide-react'
-import './App.css'
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button.jsx";
+import { Input } from "@/components/ui/input.jsx";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.jsx";
+import {
+  Download,
+  Instagram,
+  Link,
+  Smartphone,
+  Video,
+  CheckCircle,
+  AlertCircle,
+  Plus,
+} from "lucide-react";
+import "./App.css";
+import API_URL from "./config.js";
 
 function App() {
-  const [url, setUrl] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [downloadStatus, setDownloadStatus] = useState(null)
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false)
+  const [url, setUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState(null);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
     // Registrar service worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
           .then((registration) => {
-            console.log('SW registered: ', registration);
+            console.log("SW registered: ", registration);
           })
           .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
+            console.log("SW registration failed: ", registrationError);
           });
       });
     }
 
     // Detectar evento de instalação PWA
-    window.addEventListener('beforeinstallprompt', (e) => {
+    window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallPrompt(true);
     });
-  }, [])
+  }, []);
 
   const handleInstallApp = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
+      if (outcome === "accepted") {
         setShowInstallPrompt(false);
       }
       setDeferredPrompt(null);
     }
-  }
+  };
 
   const handleDownload = async () => {
     if (!url.trim()) {
-      setDownloadStatus({ type: 'error', message: 'Por favor, insira uma URL válida do Instagram.' })
-      return
+      setDownloadStatus({
+        type: "error",
+        message: "Por favor, insira uma URL válida do Instagram.",
+      });
+      return;
     }
 
-    if (!url.includes('instagram.com')) {
-      setDownloadStatus({ type: 'error', message: 'Por favor, insira uma URL válida do Instagram.' })
-      return
+    if (!url.includes("instagram.com")) {
+      setDownloadStatus({
+        type: "error",
+        message: "Por favor, insira uma URL válida do Instagram.",
+      });
+      return;
     }
 
-    setIsLoading(true)
-    setDownloadStatus(null)
+    setIsLoading(true);
+    setDownloadStatus(null);
 
     try {
-      const response = await fetch('/api/instagram/download', {
-        method: 'POST',
+      const response = await fetch(API_URL, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url: url.trim() })
-      })
+        body: JSON.stringify({ url: url.trim() }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        setDownloadStatus({ 
-          type: 'success', 
+        setDownloadStatus({
+          type: "success",
           message: data.message,
           videoUrl: data.video_url,
-          title: data.title
-        })
+          title: data.title,
+        });
       } else {
-        setDownloadStatus({ 
-          type: 'error', 
-          message: data.error || 'Erro ao processar o vídeo.' 
-        })
+        setDownloadStatus({
+          type: "error",
+          message: data.error || "Erro ao processar o vídeo.",
+        });
       }
     } catch (error) {
-      setDownloadStatus({ 
-        type: 'error', 
-        message: 'Erro de conexão. Verifique se o servidor está funcionando.' 
-      })
+      setDownloadStatus({
+        type: "error",
+        message: "Erro de conexão. Verifique se o servidor está funcionando.",
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleUrlChange = (e) => {
-    setUrl(e.target.value)
+    setUrl(e.target.value);
     if (downloadStatus) {
-      setDownloadStatus(null)
+      setDownloadStatus(null);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
@@ -115,7 +138,7 @@ function App() {
               </h1>
             </div>
             {showInstallPrompt && (
-              <Button 
+              <Button
                 onClick={handleInstallApp}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
               >
@@ -138,7 +161,7 @@ function App() {
             </span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Baixe vídeos, reels e IGTV do Instagram de forma rápida e gratuita. 
+            Baixe vídeos, reels e IGTV do Instagram de forma rápida e gratuita.
             Sem necessidade de login ou instalação de aplicativos.
           </p>
         </div>
@@ -166,7 +189,7 @@ function App() {
                   className="pl-10 h-12 text-lg border-2 border-gray-200 focus:border-purple-500 transition-colors"
                 />
               </div>
-              <Button 
+              <Button
                 onClick={handleDownload}
                 disabled={isLoading}
                 className="h-12 px-8 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold text-lg transition-all duration-200 transform hover:scale-105"
@@ -187,13 +210,15 @@ function App() {
 
             {/* Status Message */}
             {downloadStatus && (
-              <div className={`p-4 rounded-lg border ${
-                downloadStatus.type === 'success' 
-                  ? 'bg-green-50 text-green-800 border-green-200' 
-                  : 'bg-red-50 text-red-800 border-red-200'
-              }`}>
+              <div
+                className={`p-4 rounded-lg border ${
+                  downloadStatus.type === "success"
+                    ? "bg-green-50 text-green-800 border-green-200"
+                    : "bg-red-50 text-red-800 border-red-200"
+                }`}
+              >
                 <div className="flex items-start space-x-2">
-                  {downloadStatus.type === 'success' ? (
+                  {downloadStatus.type === "success" ? (
                     <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                   ) : (
                     <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
@@ -202,10 +227,12 @@ function App() {
                     <p className="font-medium">{downloadStatus.message}</p>
                     {downloadStatus.videoUrl && (
                       <div className="mt-3">
-                        <p className="text-sm mb-2">Título: {downloadStatus.title}</p>
-                        <a 
-                          href={downloadStatus.videoUrl} 
-                          target="_blank" 
+                        <p className="text-sm mb-2">
+                          Título: {downloadStatus.title}
+                        </p>
+                        <a
+                          href={downloadStatus.videoUrl}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
                         >
@@ -227,7 +254,9 @@ function App() {
             <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Smartphone className="h-8 w-8 text-blue-600" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Compatível com Mobile</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              Compatível com Mobile
+            </h3>
             <p className="text-gray-600">
               Funciona perfeitamente em smartphones, tablets e computadores
             </p>
@@ -297,7 +326,8 @@ function App() {
       <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200 mt-16">
         <div className="container mx-auto px-4 py-8 text-center">
           <p className="text-gray-600">
-            © 2025 InstaOrionapp. Ferramenta gratuita para baixar vídeos do Instagram.
+            © 2025 InstaOrionapp. Ferramenta gratuita para baixar vídeos do
+            Instagram.
           </p>
           <p className="text-sm text-gray-500 mt-2">
             Este serviço não é afiliado ao Instagram ou Meta.
@@ -305,8 +335,7 @@ function App() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
 
-export default App
-
+export default App;
