@@ -9,7 +9,7 @@
       }
     },
     {
-      "src": "InstaOrionapp-api/src/main.py",
+      "src": "InstaOrionapp-api/requirements.txt",
       "use": "@vercel/python",
       "config": {
         "includeFiles": "InstaOrionapp-api/**"
