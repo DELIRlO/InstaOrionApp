@@ -1,5 +1,0 @@
-# Netscape HTTP Cookie File
-# http://www.netscape.com/newsref/std/cookie_spec.html
-# This is a generated file!  Do not edit.
-
-.instagram.com	TRUE	/	TRUE	0	sessionid	64192874782%3AVl4bjqWGuclwlj%3A1%3AAYdlWZPzvRiXG-De6RTG2iy0t8DD1d5KLdnfIzJd6Q
