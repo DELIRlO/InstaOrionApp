@@ -42,3 +42,4 @@ def health_check():
     return jsonify({'status': 'ok'})
 
 # O Gunicorn vai procurar a variável 'app' neste arquivo para iniciar o servidor.
+
