@@ -1,38 +1,26 @@
 import re
 import os
-import instaloader
+import requests
 from flask import Blueprint, request, jsonify
 
 instagram_bp = Blueprint('instagram', __name__)
 
-# --- Início da Correção ---
-
-# Inicializa o Instaloader
-L = instaloader.Instaloader(
-    download_videos=True,
-    download_geotags=False,
-    download_comments=False,
-    save_metadata=False,
-    compress_json=False,
-)
-
-# Caminho para o arquivo de cookies
-# Este arquivo deve estar no mesmo diretório que este script para o Render encontrar
-# O arquivo `cookies.txt` deve conter as informações de sessão da sua conta do Instagram
 COOKIE_FILE = os.path.join(os.path.dirname(__file__), "cookies.txt")
-# Usaremos uma conta de usuário dummy para o instaloader
-DUMMY_USERNAME = "orionapp"
 
-try:
-    print("Tentando carregar a sessão do arquivo de cookies...")
-    L.load_session_from_file(DUMMY_USERNAME, COOKIE_FILE)
-    print("Sessão carregada com sucesso a partir do arquivo de cookies.")
-except FileNotFoundError:
-    print("AVISO: Arquivo de cookies não encontrado. O download pode falhar para posts privados ou com restrições.")
-except Exception as e:
-    print(f"AVISO: Ocorreu um erro ao carregar a sessão: {e}. O download pode falhar.")
-
-# --- Fim da Correção ---
+def get_session_id():
+    """Lê o sessionid do arquivo de cookies."""
+    try:
+        with open(COOKIE_FILE, 'r') as f:
+            for line in f:
+                if 'sessionid' in line:
+                    parts = line.strip().split('\t')
+                    return parts[-1]
+    except FileNotFoundError:
+        print("AVISO: Arquivo de cookies não encontrado.")
+        return None
+    except Exception as e:
+        print(f"AVISO: Erro ao ler o arquivo de cookies: {e}")
+        return None
 
 def extract_shortcode(url):
     """Extrai o shortcode de uma URL do Instagram."""
@@ -43,61 +31,66 @@ def extract_shortcode(url):
 
 @instagram_bp.route('/download', methods=['POST'])
 def download_video():
+    data = request.get_json()
+    if not data or 'url' not in data:
+        return jsonify({'error': 'Dados JSON inválidos ou URL não fornecida'}), 400
+
+    url = data['url'].strip()
+    shortcode = extract_shortcode(url)
+
+    if not shortcode:
+        return jsonify({'error': 'URL do Instagram inválida ou não contém um post válido'}), 400
+
+    session_id = get_session_id()
+    if not session_id:
+        return jsonify({'error': 'Falha na autenticação: sessionid não encontrado.'}), 500
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'X-Requested-With': 'XMLHttpRequest'
+    }
+    cookies = {'sessionid': session_id}
+    
+    insta_url = f"https://www.instagram.com/p/{shortcode}/?__a=1&__d=dis"
+
     try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'Dados JSON não fornecidos'}), 400
+        response = requests.get(insta_url, headers=headers, cookies=cookies)
+        response.raise_for_status()
+        json_data = response.json()
+        
+        video_url = None
+        title = "Vídeo do Instagram"
 
-        url = data.get('url', '').strip()
-        shortcode = extract_shortcode(url)
+        # Acessa a estrutura de dados correta
+        media = json_data.get('data', {}).get('xdt_shortcode_media', {})
+        
+        if media and media.get('is_video') and media.get('video_versions'):
+            video_url = media['video_versions'][0]['url']
+            caption_edges = media.get('edge_media_to_caption', {}).get('edges', [])
+            if caption_edges and 'node' in caption_edges[0]:
+                title = caption_edges[0]['node'].get('text', title)
+        else:
+            return jsonify({'error': 'Este post não contém um vídeo ou os dados são inválidos.'}), 400
 
-        if not shortcode:
-            return jsonify({'error': 'URL do Instagram inválida ou não contém um post válido'}), 400
+        if not video_url:
+            return jsonify({'error': 'Não foi possível encontrar a URL do vídeo na resposta da API.'}), 404
 
-        print(f"Iniciando download com Instaloader para o shortcode: {shortcode}")
+        if len(title) > 150:
+            title = title[:150] + "..."
 
-        try:
-            # Obtém o post usando o shortcode
-            post = instaloader.Post.from_shortcode(L.context, shortcode)
+        return jsonify({
+            'success': True,
+            'video_url': video_url,
+            'title': title,
+            'message': 'Vídeo encontrado com sucesso!'
+        })
 
-            if not post.is_video:
-                return jsonify({'error': 'Este post não contém um vídeo.'}), 400
-
-            video_url = post.video_url
-            title = post.caption if post.caption else "Vídeo do Instagram"
-            
-            # Limita o tamanho do título para evitar textos muito longos
-            if title and len(title) > 150:
-                title = title[:150] + "..."
-
-            if not video_url:
-                 return jsonify({'error': 'Não foi possível extrair a URL do vídeo.'}), 404
-
-            print(f"Vídeo encontrado: {video_url[:50]}...")
-
-            return jsonify({
-                'success': True,
-                'video_url': video_url,
-                'title': title,
-                'message': 'Vídeo encontrado com sucesso!'
-            })
-
-        except instaloader.exceptions.PrivateProfileNotFollowedException:
-            return jsonify({'error': 'Este post pertence a um perfil privado que você não segue.'}), 403
-        except instaloader.exceptions.ProfileNotExistsException:
-            return jsonify({'error': 'O perfil associado a este post não existe.'}), 404
-        except instaloader.exceptions.LoginRequiredException:
-             return jsonify({'error': 'Este post requer login para ser acessado. Verifique se a sessão de login é válida.'}), 401
-        except instaloader.exceptions.PostChangedException:
-            return jsonify({'error': 'O post foi alterado ou removido.'}), 404
-        except instaloader.exceptions.NotFoundException:
-            return jsonify({'error': 'Post não encontrado. Verifique se a URL está correta e se o post não foi deletado.'}), 404
-        except Exception as e:
-            # Captura outras exceções do instaloader que podem não ser específicas
-            print(f"Um erro do Instaloader ocorreu: {str(e)}")
-            return jsonify({'error': 'O serviço intermediário falhou.'}), 500
-
-
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            return jsonify({'error': 'Post não encontrado. Verifique a URL.'}), 404
+        elif e.response.status_code == 401 or e.response.status_code == 403:
+             return jsonify({'error': 'Acesso negado. O cookie de sessão pode ser inválido ou expirado.'}), 403
+        else:
+            return jsonify({'error': f'Erro de comunicação com o Instagram: {e.response.status_code}'}), 500
     except Exception as e:
-        print(f"Erro inesperado no servidor: {str(e)}")
         return jsonify({'error': f'Ocorreu um erro inesperado no servidor: {str(e)}'}), 500
