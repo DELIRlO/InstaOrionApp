@@ -25,7 +25,7 @@ def get_shortcode_from_url(url: str) -> str | None:
 def fetch_video_data(shortcode: str) -> dict:
     """Busca os dados do post e extrai as informações do vídeo."""
     if not INSTAGRAM_SESSION_ID:
-        logging.error("Variável de ambiente INSTAGRAM_SESSION_ID não encontrada. Acesso não autenticado.")
+        logging.warning("Variável de ambiente INSTAGRAM_SESSION_ID não encontrada. Acesso não autenticado.")
         return {"error": "A variável de ambiente INSTAGRAM_SESSION_ID não está configurada no servidor."}
 
     api_url = f"https://www.instagram.com/p/{shortcode}/?__a=1&__d=dis"
