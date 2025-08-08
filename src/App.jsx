@@ -103,13 +103,13 @@ function App() {
       } else {
         setDownloadStatus({
           type: "error",
-          message: data.error || "Erro ao processar o vídeo.",
+          message: "Falha ao baixar o vídeo. Tente novamente mais tarde.",
         });
       }
     } catch (error) {
       setDownloadStatus({
         type: "error",
-        message: "Erro de conexão. Verifique se o servidor está funcionando.",
+        message: "Falha ao baixar o vídeo. Tente novamente mais tarde.",
       });
     } finally {
       setIsLoading(false);
