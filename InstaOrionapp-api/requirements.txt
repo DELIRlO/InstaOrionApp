@@ -1,20 +1,9 @@
-blinker
-certifi
-charset-normalizer
-click
+# Core web framework
 Flask
 flask-cors
-Flask-SQLAlchemy
-greenlet
-idna
-instaloader
-itsdangerous
-Jinja2
-MarkupSafe
-requests
-SQLAlchemy
-typing_extensions
-urllib3
-Werkzeug
 
+# Production WSGI server
 gunicorn==22.0.0
+
+# For making HTTP requests
+requests
