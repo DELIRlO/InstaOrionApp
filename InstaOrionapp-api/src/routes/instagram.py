@@ -49,9 +49,12 @@ def download_video():
         session_id = get_session_id_from_cookie_file(cookie_file)
 
         if not session_id or session_id == 'SEU_SESSIONID_AQUI':
+            print("Erro: 'sessionid' não encontrado ou não configurado no arquivo cookies.txt.")
             return jsonify({
                 'error': 'Cookie de sessão do Instagram não configurado. Verifique o arquivo cookies.txt e configure um sessionid válido.'
             }), 500
+        
+        print(f"Usando sessionid: {session_id[:15]}...")
 
         # Usamos um endpoint de dados do Instagram que é muito mais rápido
         if '?' in url:
@@ -83,6 +86,7 @@ def download_video():
         elif response.status_code == 401:
             return jsonify({'error': 'Não autorizado. O sessionid pode estar expirado ou inválido.'}), 401
         elif response.status_code != 200:
+            print(f"Erro do Instagram. Resposta: {response.text[:200]}") # Log da resposta
             return jsonify({'error': f'Instagram retornou erro {response.status_code}'}), response.status_code
             
         try:
