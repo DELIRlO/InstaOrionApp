@@ -7,3 +7,5 @@ gunicorn==22.0.0
 
 # For making HTTP requests
 requests
+
+Flask-SQLAlchemy
